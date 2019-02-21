@@ -1,0 +1,87 @@
+import de.bezier.data.sql.*;
+
+SQLite db;
+int selectedId = -1;
+
+void init()
+{
+	background(#FFFFFF);
+	fill(#064626);
+	stroke(1);
+	for (int i = 0 ; i < 8 ; i++)
+	{
+		for (int j = ((i+1)%2) ; j < 8 ; j+=2)
+		{
+			rect(j*75,i*75,75,75);
+		}		
+	}
+	PImage img[] = new PImage[32];
+	int imgX[] = new int[32];
+	int imgY[] = new int[32];
+
+	if ( db.connect() )
+    {
+    	int i = 0;
+    	String query = "SELECT chemin,Line,Col from PiecesPc "+
+					   "LEFT JOIN EmplacementPc on(EmplacementPc.id = PiecesPc.id)";
+    	db.query(query);
+    	while (db.next())
+    	{
+    		img[i] = loadImage("pcpieces/"+db.getString("chemin"));
+    		imgX[i] = Integer.parseInt(db.getString("Col")) * 75;
+    		imgY[i] = Integer.parseInt(db.getString("Line")) * 75;
+    		i++;
+    	}
+
+    	query = "SELECT chemin,Line,Col from PiecesUser "+
+				"LEFT JOIN EmplacementUser on(EmplacementUser.id = PiecesUser.id)";
+
+    	db.query(query);
+    	while (db.next())
+    	{
+    		img[i] = loadImage("userpieces/"+db.getString("chemin"));
+    		imgX[i] = Integer.parseInt(db.getString("Col")) * 75;
+    		imgY[i] = Integer.parseInt(db.getString("Line")) * 75;
+    		i++;
+    	}
+    }
+
+
+	for (int i = 0 ; i < 32; i++)
+		image(img[i], imgX[i], imgY[i], 75, 75);
+}
+
+void setup()
+{
+	db = new SQLite( this, "data.db" );  // open database file
+
+	size(600,600);
+
+	init();
+}
+
+void draw()
+{
+
+}
+
+void mouseClicked()
+{
+	init();
+	if ( db.connect() )
+    {
+    	String query = "";
+    	query = "SELECT UserMoves.Line,UserMoves.Col from UserMoves "+
+				"Left Join EmplacementUser on (EmplacementUser.id = userMoves.id) "+
+				"where EmplacementUser.Line = "+mouseY/75+" and EmplacementUser.Col = "+mouseX/75;
+		db.query(query);
+		fill(#808080);
+
+		while (db.next()) 
+		{
+			int x = Integer.parseInt(db.getString("Col"))*75 + 37;
+			int y = Integer.parseInt(db.getString("Line"))*75 + 37;
+			ellipse(x, y, 20, 20);
+		}
+    }
+}
